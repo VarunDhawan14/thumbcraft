@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import {
   type AspectRatio,
   colorSchemes,
-  dummyThumbnails,
   type IThumbnail,
   type ThumbnailStyle,
 } from "../assets/assets";
@@ -13,34 +12,94 @@ import StyleSelector from "../components/StyleSelector";
 import ColorSchemeSelector from "../components/ColorSchemeSelector";
 import PreviewPanel from "../components/PreviewPanel";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 const Generate = () => {
   const { id } = useParams();
+
   const [title, setTitle] = useState("");
   const [additionalDetails, setAdditionalDetails] = useState("");
+
   const [thumbnail, setThumbnail] = useState<IThumbnail | null>(null);
+
   const [loading, setLoading] = useState(false);
+
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("16:9");
+
   const [colorSchemeId, setColorSchemeId] = useState<string>(
     colorSchemes[0].id,
   );
+
   const [style, setStyle] = useState<ThumbnailStyle>("Bold & Graphic");
+
   const [styleDropdownOpen, setStyleDropdownOpen] = useState(false);
 
-  const handleGenerate = async () => {};
+  const handleGenerate = async () => {
+    if (!title.trim()) {
+      alert("Please enter a title or topic.");
+      return;
+    }
 
-  const fetchThumbnail = async () => {
-    if (id) {
-      const thumbnail: any = dummyThumbnails.find(
-        (thumbnail) => thumbnail._id === id,
+    try {
+      setLoading(true);
+      setThumbnail(null);
+
+      const response = await fetch(`${API_URL}/api/thumbnail/generate`, {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json",
+        },
+
+        credentials: "include",
+
+        body: JSON.stringify({
+          title: title.trim(),
+
+          prompt: additionalDetails.trim(),
+
+          style,
+
+          aspect_ratio: aspectRatio,
+
+          color_scheme: colorSchemeId,
+
+          text_overlay: false,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Failed to generate thumbnail");
+      }
+
+      setThumbnail(data.thumbnail);
+    } catch (error: any) {
+      console.error("Thumbnail generation error:", error);
+
+      alert(
+        error?.message ||
+          "Something went wrong while generating the thumbnail.",
       );
-      setThumbnail(thumbnail ?? null);
-      setAdditionalDetails(thumbnail.user_prompt);
-      setTitle(thumbnail.title);
-      setColorSchemeId(thumbnail.colorScheme);
-      setAspectRatio(thumbnail.aspect_ratio);
-      setStyle(thumbnail.style);
+    } finally {
       setLoading(false);
     }
+  };
+
+  const fetchThumbnail = async () => {
+    if (!id) return;
+
+    /*
+      NOTE:
+      Currently there is no GET /api/thumbnail/:id
+      endpoint in your backend.
+
+      So for now, edit/preview through an existing
+      generation is not fetched from MongoDB here.
+    */
+
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -52,7 +111,8 @@ const Generate = () => {
   return (
     <>
       <SoftBackdrop />
-      <div className='pt-24 min-h-screen '>
+
+      <div className='pt-24 min-h-screen'>
         <main className='max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28 lg:pb-8'>
           <div className='grid lg:grid-cols-[400px_1fr] gap-8'>
             {/* LEFT PANEL */}
@@ -63,17 +123,20 @@ const Generate = () => {
                   <h2 className='text-xl font-bold text-zinc-100 mb-1'>
                     Create Your Thumbnail
                   </h2>
+
                   <p className='text-sm text-zinc-400'>
                     Describe your vision and let AI bring it to life
                   </p>
                 </div>
 
                 <div className='space-y-5'>
-                  {/* TITLE INPUT */}
+                  {/* TITLE */}
+
                   <div className='space-y-2'>
                     <label className='block text-sm font-medium'>
                       Title or Topic
                     </label>
+
                     <input
                       type='text'
                       value={title}
@@ -89,31 +152,38 @@ const Generate = () => {
                       </span>
                     </div>
                   </div>
-                  {/* ASPECT RATIO Selector */}
+
+                  {/* ASPECT RATIO */}
+
                   <AspectRatioSelector
                     value={aspectRatio}
                     onChange={setAspectRatio}
                   />
 
-                  {/* StyleSelector */}
+                  {/* STYLE */}
+
                   <StyleSelector
                     value={style}
                     onChange={setStyle}
                     isOpen={styleDropdownOpen}
                     setIsOpen={setStyleDropdownOpen}
                   />
-                  {/* ColorSchemeSelector */}
+
+                  {/* COLOR */}
+
                   <ColorSchemeSelector
                     value={colorSchemeId}
                     onChange={setColorSchemeId}
                   />
 
                   {/* ADDITIONAL DETAILS */}
+
                   <div className='space-y-2'>
                     <label className='block text-sm font-medium'>
                       Additional Prompts
-                      <span className='text-zinc-400 text-xs'>(optional)</span>
+                      <span className='text-zinc-400 text-xs'> (optional)</span>
                     </label>
+
                     <textarea
                       value={additionalDetails}
                       onChange={(e) => setAdditionalDetails(e.target.value)}
@@ -123,23 +193,29 @@ const Generate = () => {
                     />
                   </div>
                 </div>
+
                 {/* BUTTON */}
+
                 {!id && (
                   <button
                     onClick={handleGenerate}
-                    className='text-[15px] w-full py-3.5 rounded-xl font-medium bg-linear-to-b from-pink-500 to-pink-600 hover:from-pink-700 disabled:cursor-not-allowed transition-colors'
+                    disabled={loading}
+                    className='text-[15px] w-full py-3.5 rounded-xl font-medium bg-linear-to-b from-pink-500 to-pink-600 hover:from-pink-700 disabled:cursor-not-allowed disabled:opacity-60 transition-colors'
                   >
-                    {loading ? "Generating...." : "Generate Thumbnail"}
+                    {loading ? "Generating..." : "Generate Thumbnail"}
                   </button>
                 )}
               </div>
             </div>
+
             {/* RIGHT PANEL */}
+
             <div>
               <div className='px-8 pt-8 pb-6 rounded-2xl bg-white/8 border border-white/10 shadow-xl'>
                 <h2 className='text-lg font-semibold text-zinc-100 mb-4'>
                   Preview
                 </h2>
+
                 <PreviewPanel
                   thumbnail={thumbnail}
                   isLoading={loading}
