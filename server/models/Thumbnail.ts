@@ -1,44 +1,141 @@
-import mongoose, { mongo } from "mongoose";
+import mongoose, { Document } from "mongoose";
 
 export interface IThumbnail extends Document {
-    userID: string;
-    title: string;
-    description?: string;
-    style: "Bold & Graphic" | "Tech/Futuristic" | "Minimalist" | "Photorealistic" | "Illustrated";
-    aspect_ratio?: "16:9" | "1:1" | "9:16";
-    color_scheme?: "vibrant" | "sunset" | "forest" | "neon" | "purple" | "monochrome" | "ocean" | "pastel";
-    text_overlay?: boolean;
-    image_url?: string;
-    prompt_used?: string;
-    user_prompt?: string;
-    isGenerating?: boolean;
-    createdAt?: Date;
-    updatedAt?: Date;
+  userID: string;
+
+  title: string;
+
+  description?: string;
+
+  style:
+    | "Bold & Graphic"
+    | "Tech/Futuristic"
+    | "Minimalist"
+    | "Photorealistic"
+    | "Illustrated";
+
+  aspect_ratio?: "16:9" | "1:1" | "9:16";
+
+  color_scheme?:
+    | "vibrant"
+    | "sunset"
+    | "forest"
+    | "neon"
+    | "purple"
+    | "monochrome"
+    | "ocean"
+    | "pastel"
+    | "gold"
+    | "red"
+    | "blue"
+    | "dark"
+    | "gradient";
+
+  text_overlay?: boolean;
+
+  image_url?: string;
+
+  prompt_used?: string;
+
+  user_prompt?: string;
+
+  isGenerating?: boolean;
+
+  createdAt?: Date;
+
+  updatedAt?: Date;
 }
 
-const ThumbnailSchema = new mongoose.Schema<IThumbnail>({
-   userID: {type: String, ref: "User", required: true},
+const ThumbnailSchema =
+  new mongoose.Schema<IThumbnail>(
+    {
+      userID: {
+        type: String,
+        ref: "User",
+        required: true,
+      },
 
-    title: {type: String, required: true, trim: true},
+      title: {
+        type: String,
+        required: true,
+        trim: true,
+      },
 
-    description: {type: String, trim: true},
-    style: {type: String, required: true, enum: ["Bold & Graphic", "Tech/Futuristic", "Minimalist", "Photorealistic", "Illustrated"]},
+      description: {
+        type: String,
+        trim: true,
+      },
 
-    aspect_ratio:  {type: String, enum: ["16:9", "1:1", "9:16"], default: "16:9"},
+      style: {
+        type: String,
+        required: true,
+        enum: [
+          "Bold & Graphic",
+          "Tech/Futuristic",
+          "Minimalist",
+          "Photorealistic",
+          "Illustrated",
+        ],
+      },
 
-    color_scheme: {type: String, enum:["vibrant", "sunset","forest", "neon", "purple", "monochrome", "ocean", "pastel"]},
+      aspect_ratio: {
+        type: String,
+        enum: ["16:9", "1:1", "9:16"],
+        default: "16:9",
+      },
 
-    text_overlay: {type: Boolean, default:false},
+      color_scheme: {
+        type: String,
+        enum: [
+          "vibrant",
+          "sunset",
+          "forest",
+          "neon",
+          "purple",
+          "monochrome",
+          "ocean",
+          "pastel",
+          "gold",
+          "red",
+          "blue",
+          "dark",
+          "gradient",
+        ],
+      },
 
-    image_url:  {type: String, default: " "},
+      text_overlay: {
+        type: Boolean,
+        default: false,
+      },
 
-    prompt_used: {type: String},
+      image_url: {
+        type: String,
+        default: "",
+      },
 
-    user_prompt: {type: String},
+      prompt_used: {
+        type: String,
+      },
 
-    isGenerating: {type: Boolean , default: true},
-})
+      user_prompt: {
+        type: String,
+      },
 
-const Thumbnail = mongoose.models.Thumbnail || mongoose.model<IThumbnail>("Thumbnail", ThumbnailSchema);
+      isGenerating: {
+        type: Boolean,
+        default: true,
+      },
+    },
+    {
+      timestamps: true,
+    },
+  );
+
+const Thumbnail =
+  mongoose.models.Thumbnail ||
+  mongoose.model<IThumbnail>(
+    "Thumbnail",
+    ThumbnailSchema,
+  );
 
 export default Thumbnail;
