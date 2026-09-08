@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import SoftBackdrop from "../components/SoftBackdrop";
-import { dummyThumbnails, type IThumbnail } from "../assets/assets";
+import type { IThumbnail } from "../assets/assets";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowUpRightIcon, DownloadIcon, TrashIcon } from "lucide-react";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const MyGeneration = () => {
   const aspectRatioClassMap: Record<string, string> = {
@@ -10,22 +12,60 @@ const MyGeneration = () => {
     "1:1": "aspect-square",
     "9:16": "aspect-[9/16]",
   };
+
   const [thumbnails, setThumbnails] = useState<IThumbnail[]>([]);
+
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
   const fetchThumbnails = async () => {
-    setThumbnails(dummyThumbnails as unknown as IThumbnail[]);
-    setLoading(false);
+    try {
+      setLoading(true);
+
+      const response = await fetch(`${API_URL}/api/thumbnail`, {
+        credentials: "include",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Failed to fetch thumbnails");
+      }
+
+      setThumbnails(data.thumbnails || []);
+    } catch (error) {
+      console.error("Fetch thumbnails error:", error);
+
+      setThumbnails([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDownload = (image_url: string) => {
     window.open(image_url, "_blank");
   };
 
-  const handleDelete = async (id: String) => {
-    console.log(id);
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(`${API_URL}/api/thumbnail/delete/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data?.message || "Failed to delete thumbnail");
+      }
+
+      setThumbnails((prev) => prev.filter((thumbnail) => thumbnail._id !== id));
+    } catch (error: any) {
+      console.error("Delete thumbnail error:", error);
+
+      alert(error?.message || "Failed to delete thumbnail");
+    }
   };
 
   useEffect(() => {
@@ -35,15 +75,20 @@ const MyGeneration = () => {
   return (
     <>
       <SoftBackdrop />
+
       <div className='mt-32 min-h-screen px-6 md:px-16 lg:px-25 xl:px-32'>
-        {/*HEADER */}
+        {/* HEADER */}
+
         <div className='mb-8'>
           <h1 className='text-2xl font-bold text-zinc-200'>My Generations</h1>
+
           <p className='text-sm text-zinc-400 mt-1'>
             View and manage all your AI-generated thumbnails
           </p>
         </div>
+
         {/* LOADING */}
+
         {loading && (
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
             {Array.from({ length: 6 }).map((_, i) => (
@@ -55,23 +100,28 @@ const MyGeneration = () => {
           </div>
         )}
 
-        {/* EMPTY State */}
+        {/* EMPTY */}
+
         {!loading && thumbnails.length === 0 && (
           <div className='text-center py-24'>
             <h3 className='text-lg font-semibold text-zinc-200'>
               No Thumbnails yet
             </h3>
+
             <p className='text-sm text-zinc-400 mt-2'>
               Generate your first thumbnail to see it here!
             </p>
           </div>
         )}
+
         {/* GRID */}
+
         {!loading && thumbnails.length > 0 && (
-          <div className='column-1 sm:columns-2 lg:columns-3 2xl:columns-4 gap-8'>
+          <div className='columns-1 sm:columns-2 lg:columns-3 2xl:columns-4 gap-8'>
             {thumbnails.map((thumb: IThumbnail) => {
               const aspectClass =
                 aspectRatioClassMap[thumb.aspect_ratio || "16:9"];
+
               return (
                 <div
                   key={thumb._id}
@@ -79,6 +129,7 @@ const MyGeneration = () => {
                   className='mb-8 group relative cursor-pointer rounded-2xl bg-white/6 border border-white/10 transition shadow-xl break-inside-avoid'
                 >
                   {/* IMAGE */}
+
                   <div
                     className={`relative overflow-hidden rounded-t-2xl ${aspectClass} bg-black`}
                   >
@@ -89,35 +140,43 @@ const MyGeneration = () => {
                         className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-300'
                       />
                     ) : (
-                      <div className='w-full h-full justify-center items-center text-sm text-zinc-400'>
-                        {thumb.isGenerating ? "Generating" : "No Image"}
+                      <div className='w-full h-full flex justify-center items-center text-sm text-zinc-400'>
+                        {thumb.isGenerating ? "Generating..." : "No Image"}
                       </div>
                     )}
+
                     {thumb.isGenerating && (
-                      <div className='absolute insert-0 bg-black/50 flex items-center justify-center text-sm font-medium text-white'>
-                        Generating....
+                      <div className='absolute inset-0 bg-black/50 flex items-center justify-center text-sm font-medium text-white'>
+                        Generating...
                       </div>
                     )}
                   </div>
 
-                  {/*Content*/}
+                  {/* CONTENT */}
 
                   <div className='p-4 space-y-2'>
                     <h3 className='text-sm font-semibold text-zinc-100 line-clamp-2'>
                       {thumb.title}
                     </h3>
+
                     <div className='flex flex-wrap gap-2 text-xs text-zinc-400'>
                       <span className='px-2 py-0.5 rounded bg-white/8'>
                         {thumb.style}
                       </span>
+
                       <span className='px-2 py-0.5 rounded bg-white/8'>
                         {thumb.aspect_ratio}
                       </span>
                     </div>
+
                     <p className='text-xs text-zinc-500'>
-                      {new Date(thumb.createdAt!).toDateString()}
+                      {thumb.createdAt
+                        ? new Date(thumb.createdAt).toDateString()
+                        : ""}
                     </p>
                   </div>
+
+                  {/* ACTIONS */}
 
                   <div
                     onClick={(e) => e.stopPropagation()}
@@ -128,16 +187,23 @@ const MyGeneration = () => {
                       className='size-6 bg-black/50 p-1 rounded hover:bg-pink-600 transition-all'
                     />
 
-                    <DownloadIcon
-                      onClick={() => handleDownload(thumb.image_url!)}
-                      className='size-6 bg-black/50 p-1 rounded hover:bg-pink-600 transition-all'
-                    />
-                    <Link
-                      target='_blank'
-                      to={`/preview?thumbnail_url=${thumb.image_url} & title = % {thumb.title}`}
-                    >
-                      <ArrowUpRightIcon className='size-6 bg-black/50 p-1 rounded hover:bg-pink-600 transition-all' />
-                    </Link>
+                    {thumb.image_url && (
+                      <DownloadIcon
+                        onClick={() => handleDownload(thumb.image_url!)}
+                        className='size-6 bg-black/50 p-1 rounded hover:bg-pink-600 transition-all'
+                      />
+                    )}
+
+                    {thumb.image_url && (
+                      <Link
+                        target='_blank'
+                        to={`/preview?thumbnail_url=${encodeURIComponent(
+                          thumb.image_url,
+                        )}&title=${encodeURIComponent(thumb.title)}`}
+                      >
+                        <ArrowUpRightIcon className='size-6 bg-black/50 p-1 rounded hover:bg-pink-600 transition-all' />
+                      </Link>
+                    )}
                   </div>
                 </div>
               );

@@ -97,6 +97,7 @@ const Generate = () => {
 
       So for now, edit/preview through an existing
       generation is not fetched from MongoDB here.
+      and it will generate something.
     */
 
     setLoading(false);
