@@ -46,8 +46,19 @@ const MyGeneration = () => {
     }
   };
 
-  const handleDownload = (image_url: string) => {
-    window.open(image_url, "_blank");
+  const handleDownload = (image_url: string, title: string) => {
+    const fileName =
+      title
+        .trim()
+        .replace(/[^a-zA-Z0-9\s-_]/g, "")
+        .replace(/\s+/g, "_") || "thumbnail";
+
+    const downloadUrl = image_url.replace(
+      "/upload/",
+      `/upload/fl_attachment:${fileName}/`,
+    );
+
+    window.location.href = downloadUrl;
   };
 
   const handleDelete = async (id: string) => {
@@ -192,7 +203,9 @@ const MyGeneration = () => {
 
                     {thumb.image_url && (
                       <DownloadIcon
-                        onClick={() => handleDownload(thumb.image_url!)}
+                        onClick={() =>
+                          handleDownload(thumb.image_url!, thumb.title)
+                        }
                         className='size-6 bg-black/50 p-1 rounded hover:bg-pink-600 transition-all'
                       />
                     )}
