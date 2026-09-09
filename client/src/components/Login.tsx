@@ -1,14 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import SoftBackdrop from "./SoftBackdrop";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import toast from "react-hot-toast";
 
 const Login = () => {
   const [state, setState] = useState<"login" | "register">("login");
 
   const { user, login, signUp } = useAuth();
 
+  const location = useLocation();
   const navigate = useNavigate();
+
+  const hasSubmittedLogin = useRef(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -18,6 +22,17 @@ const Login = () => {
   });
 
   const [loading, setLoading] = useState(false);
+
+  // If user is already logged in and directly opens /login,
+  // send them to the intended page or home.
+  useEffect(() => {
+    if (user && !hasSubmittedLogin.current) {
+      const redirectTo =
+        typeof location.state?.from === "string" ? location.state.from : "/";
+
+      navigate(redirectTo, { replace: true });
+    }
+  }, [user, navigate, location.state]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -35,11 +50,11 @@ const Login = () => {
 
     if (state === "register") {
       if (formData.password.length < 8) {
-        return;
+        return toast.error("Password must be at least 8 characters");
       }
 
       if (formData.password !== formData.confirmPassword) {
-        return;
+        return toast.error("Passwords do not match");
       }
     }
 
@@ -49,33 +64,49 @@ const Login = () => {
       if (state === "login") {
         try {
           await login({
-            email: formData.email,
+            email: formData.email.trim(),
             password: formData.password,
+          });
+
+          // Prevent the useEffect above from redirecting somewhere else.
+          hasSubmittedLogin.current = true;
+
+          const redirectTo =
+            typeof location.state?.from === "string"
+              ? location.state.from
+              : "/";
+
+          navigate(redirectTo, {
+            replace: true,
           });
         } catch (error: any) {
           if (error?.requiresVerification && error?.email) {
             navigate(`/verify-email?email=${encodeURIComponent(error.email)}`);
+
+            return;
           }
+
+          toast.error(error?.message || "Invalid email or password");
         }
       } else {
         await signUp({
-          name: formData.name,
-          email: formData.email,
+          name: formData.name.trim(),
+          email: formData.email.trim(),
           password: formData.password,
         });
 
-        navigate(`/verify-email?email=${encodeURIComponent(formData.email)}`);
+        navigate(
+          `/verify-email?email=${encodeURIComponent(formData.email.trim())}`,
+        );
       }
+    } catch (error: any) {
+      console.error("Authentication error:", error);
+
+      toast.error(error?.message || "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (user) {
-      navigate("/");
-    }
-  }, [user, navigate]);
 
   return (
     <>
@@ -96,6 +127,7 @@ const Login = () => {
               : "Create your SiteCraft AI account"}
           </p>
 
+          {/* NAME */}
           {state !== "login" && (
             <div className='flex items-center mt-6 w-full bg-white/5 ring-2 ring-white/10 focus-within:ring-pink-500/60 h-12 rounded-full overflow-hidden pl-6 gap-2 transition-all'>
               <svg
@@ -126,7 +158,12 @@ const Login = () => {
             </div>
           )}
 
-          <div className='flex items-center w-full mt-4 bg-white/5 ring-2 ring-white/10 focus-within:ring-pink-500/60 h-12 rounded-full overflow-hidden pl-6 gap-2 transition-all'>
+          {/* EMAIL */}
+          <div
+            className={`flex items-center w-full ${
+              state === "login" ? "mt-6" : "mt-4"
+            } bg-white/5 ring-2 ring-white/10 focus-within:ring-pink-500/60 h-12 rounded-full overflow-hidden pl-6 gap-2 transition-all`}
+          >
             <svg
               xmlns='http://www.w3.org/2000/svg'
               width='14'
@@ -154,6 +191,7 @@ const Login = () => {
             />
           </div>
 
+          {/* PASSWORD */}
           <div className='flex items-center mt-4 w-full bg-white/5 ring-2 ring-white/10 focus-within:ring-pink-500/60 h-12 rounded-full overflow-hidden pl-6 gap-2 transition-all'>
             <svg
               xmlns='http://www.w3.org/2000/svg'
@@ -183,6 +221,7 @@ const Login = () => {
             />
           </div>
 
+          {/* CONFIRM PASSWORD */}
           {state === "register" && (
             <div className='flex items-center mt-4 w-full bg-white/5 ring-2 ring-white/10 focus-within:ring-pink-500/60 h-12 rounded-full overflow-hidden pl-6 gap-2 transition-all'>
               <svg
@@ -214,6 +253,7 @@ const Login = () => {
             </div>
           )}
 
+          {/* FORGOT PASSWORD */}
           {state === "login" && (
             <div className='mt-4 text-left'>
               <button
@@ -226,6 +266,7 @@ const Login = () => {
             </div>
           )}
 
+          {/* PASSWORD MISMATCH */}
           {state === "register" &&
             formData.confirmPassword &&
             formData.password !== formData.confirmPassword && (
@@ -234,6 +275,7 @@ const Login = () => {
               </p>
             )}
 
+          {/* SUBMIT */}
           <button
             type='submit'
             disabled={loading}
@@ -246,6 +288,7 @@ const Login = () => {
                 : "Create account"}
           </button>
 
+          {/* SWITCH LOGIN / REGISTER */}
           <p
             onClick={() =>
               setState((prev) => (prev === "login" ? "register" : "login"))
