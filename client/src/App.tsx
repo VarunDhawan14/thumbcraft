@@ -9,6 +9,10 @@ import MyGeneration from "./pages/MyGeneration";
 import YtPreview from "./pages/YtPreview";
 import Login from "./components/Login";
 import { useEffect } from "react";
+import { Toaster } from "react-hot-toast";
+import VerifyEmail from "./pages/VerifyEmail";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 export default function App() {
   const { pathname } = useLocation();
@@ -18,6 +22,7 @@ export default function App() {
   }, [pathname]);
   return (
     <>
+      <Toaster />
       <LenisScroll />
       <Navbar />
       <Routes>
@@ -27,6 +32,9 @@ export default function App() {
         <Route path='/mygenerations' element={<MyGeneration />} />
         <Route path='/preview' element={<YtPreview />} />
         <Route path='/login' element={<Login />} />
+        <Route path='/verify-email' element={<VerifyEmail />} />
+        <Route path='/forgot-password' element={<ForgotPassword />} />
+        <Route path='/reset-password' element={<ResetPassword />} />
       </Routes>
       <Footer />
     </>

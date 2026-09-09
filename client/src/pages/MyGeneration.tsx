@@ -3,6 +3,7 @@ import SoftBackdrop from "../components/SoftBackdrop";
 import type { IThumbnail } from "../assets/assets";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowUpRightIcon, DownloadIcon, TrashIcon } from "lucide-react";
+import { useAuth } from "../context/AuthContext";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -12,6 +13,8 @@ const MyGeneration = () => {
     "1:1": "aspect-square",
     "9:16": "aspect-[9/16]",
   };
+
+  const { isLoggedIn } = useAuth();
 
   const [thumbnails, setThumbnails] = useState<IThumbnail[]>([]);
 
