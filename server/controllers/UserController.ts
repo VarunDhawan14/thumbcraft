@@ -21,17 +21,31 @@ export const getUsersThumbnails = async ( req: Request, res: Response) => {
 
 // Controllers to get single Thumbnail of a User
 
-export const getThumbnailbyID = async ( req: Request, res: Response) => {
-   try {
-      const {userID} = req.session;
-      const {id} = req.params;
+export const getThumbnailbyID = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const { userID } = req.session;
+    const { id } = req.params;
 
-      const thumbnail = await Thumbnail.findOne({userID, _id: id});
-      res.json({thumbnail})
-      
-   } catch (error:any) {
-      console.log(error);
-      res.status(500).json({message: error.message});
-      
-   }
-}
+    const thumbnail = await Thumbnail.findOne({
+      userID,
+      _id: id,
+    });
+
+    if (!thumbnail) {
+      return res.status(404).json({
+        message: "Thumbnail not found",
+      });
+    }
+
+    return res.json({ thumbnail });
+  } catch (error: any) {
+    console.log(error);
+
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+};
