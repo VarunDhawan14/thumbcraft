@@ -13,7 +13,7 @@ export default function Navbar() {
   return (
     <>
       <motion.nav
-        className='fixed top-0 z-50 flex items-center justify-between w-full py-4 px-6 md:px-16 lg:px-24 xl:px-32 backdrop-blur'
+        className='fixed top-0 z-50 flex items-center justify-between w-full py-2.5 px-6 md:px-16 lg:px-24 xl:px-32 backdrop-blur'
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         viewport={{ once: true }}
@@ -25,8 +25,8 @@ export default function Navbar() {
         }}
       >
         {/* Logo */}
-        <Link to='/'>
-          <img src={logo} alt='ThumbCraft' className='h-25 w-auto' />
+        <Link to='/' className='flex items-center'>
+          <img src={logo} alt='ThumbCraft' className='h-16 md:h-17 w-auto' />
         </Link>
 
         {/* Desktop Navigation */}
@@ -62,17 +62,19 @@ export default function Navbar() {
           {isLoggedIn ? (
             <div className='relative group'>
               <button
-                className='rounded-full size-8 bg-white/20 border-2 border-white/10 hover:bg-white/30 transition'
+                type='button'
+                className='rounded-full size-9 bg-white/20 border-2 border-white/10 hover:bg-white/30 transition'
                 aria-label='Profile'
               >
                 {user?.name?.charAt(0).toUpperCase()}
               </button>
 
-              {/* Current Logout Dropdown */}
-              <div className='absolute hidden group-hover:block top-6 right-0 pt-4'>
+              {/* Logout Dropdown */}
+              <div className='absolute hidden group-hover:block top-8 right-0 pt-3'>
                 <button
+                  type='button'
                   onClick={() => logout()}
-                  className='bg-white/20 border-2 border-white/10 px-5 py-1.5 rounded hover:bg-white/30 transition'
+                  className='bg-white/10 backdrop-blur-xl border border-white/10 px-5 py-2 rounded-lg hover:bg-white/20 transition'
                 >
                   Logout
                 </button>
@@ -80,6 +82,7 @@ export default function Navbar() {
             </div>
           ) : (
             <button
+              type='button'
               onClick={() => navigate("/login")}
               className='hidden md:block px-6 py-2.5 bg-pink-600 hover:bg-pink-700 active:scale-95 transition-all rounded-full'
             >
@@ -88,7 +91,12 @@ export default function Navbar() {
           )}
 
           {/* Mobile Menu Button */}
-          <button onClick={() => setIsOpen(true)} className='md:hidden'>
+          <button
+            type='button'
+            onClick={() => setIsOpen(true)}
+            className='md:hidden'
+            aria-label='Open menu'
+          >
             <MenuIcon size={26} className='active:scale-90 transition' />
           </button>
         </div>
@@ -124,6 +132,7 @@ export default function Navbar() {
 
         {isLoggedIn ? (
           <button
+            type='button'
             onClick={() => {
               setIsOpen(false);
               logout();
@@ -138,8 +147,10 @@ export default function Navbar() {
         )}
 
         <button
+          type='button'
           onClick={() => setIsOpen(false)}
           className='active:ring-3 active:ring-white aspect-square size-10 p-1 items-center justify-center bg-pink-600 hover:bg-pink-700 transition text-white rounded-md flex'
+          aria-label='Close menu'
         >
           <XIcon />
         </button>
