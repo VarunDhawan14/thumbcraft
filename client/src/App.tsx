@@ -13,6 +13,9 @@ import { Toaster } from "react-hot-toast";
 import VerifyEmail from "./pages/VerifyEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import Contact from "./pages/Contact";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 
 export default function App() {
   const { pathname } = useLocation();
@@ -20,22 +23,38 @@ export default function App() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname]);
+
   return (
     <>
       <Toaster />
       <LenisScroll />
       <Navbar />
+
       <Routes>
         <Route path='/' element={<HomePage />} />
+
         <Route path='/generate' element={<Generate />} />
         <Route path='/generate/:id' element={<Generate />} />
+
         <Route path='/mygenerations' element={<MyGeneration />} />
+
         <Route path='/preview' element={<YtPreview />} />
+
+        <Route path='/contact' element={<Contact />} />
+
+        <Route path='/privacy' element={<Privacy />} />
+
+        <Route path='/terms' element={<Terms />} />
+
         <Route path='/login' element={<Login />} />
+
         <Route path='/verify-email' element={<VerifyEmail />} />
+
         <Route path='/forgot-password' element={<ForgotPassword />} />
+
         <Route path='/reset-password' element={<ResetPassword />} />
       </Routes>
+
       <Footer />
     </>
   );
