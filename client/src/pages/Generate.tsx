@@ -15,8 +15,6 @@ import { useAuth } from "../context/AuthContext";
 import toast from "react-hot-toast";
 import api from "../configs/api";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-
 const Generate = () => {
   const { id } = useParams();
   const { pathname } = useLocation();
@@ -41,66 +39,42 @@ const Generate = () => {
   const [styleDropdownOpen, setStyleDropdownOpen] = useState(false);
 
   const handleGenerate = async () => {
-    if (!isLoggedIn) return toast.error("Please login to generate thumbnails");
-    if (!title.trim()) return toast.error("Title is required");
-    setLoading(true);
+    if (!isLoggedIn) {
+      return toast.error("Please login to generate thumbnails");
+    }
 
-    const api_payload = {
-      title,
-      prompt: additionalDetails,
-      style,
-      aspect_ratio: aspectRatio,
-      color_scheme: colorSchemeId,
-      text_overlay: true,
-    };
-
-    const { data } = await api.post("/api/thumbnail/generate", api_payload);
-
-    if (data.thumbnail) {
-      navigate("/generate/" + data.thumbnail._id);
-      toast.success(data.message);
+    if (!title.trim()) {
+      return toast.error("Title is required");
     }
 
     try {
       setLoading(true);
       setThumbnail(null);
 
-      const response = await fetch(`${API_URL}/api/thumbnail/generate`, {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json",
-        },
-
-        credentials: "include",
-
-        body: JSON.stringify({
-          title: title.trim(),
-
-          prompt: additionalDetails.trim(),
-
-          style,
-
-          aspect_ratio: aspectRatio,
-
-          color_scheme: colorSchemeId,
-
-          text_overlay: false,
-        }),
+      const { data } = await api.post("/api/thumbnail/generate", {
+        title: title.trim(),
+        prompt: additionalDetails.trim(),
+        style,
+        aspect_ratio: aspectRatio,
+        color_scheme: colorSchemeId,
+        text_overlay: true,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data?.message || "Failed to generate thumbnail");
+      if (!data.thumbnail) {
+        throw new Error("Thumbnail was not generated");
       }
 
       setThumbnail(data.thumbnail);
+
+      navigate(`/generate/${data.thumbnail._id}`);
+
+      toast.success(data.message || "Thumbnail generated successfully");
     } catch (error: any) {
       console.error("Thumbnail generation error:", error);
 
-      alert(
-        error?.message ||
+      toast.error(
+        error?.response?.data?.message ||
+          error?.message ||
           "Something went wrong while generating the thumbnail.",
       );
     } finally {
@@ -110,7 +84,7 @@ const Generate = () => {
 
   const fetchThumbnail = async () => {
     try {
-      const { data } = await api.get(`/api/user/thumbnail/${id}`);
+      const { data } = await api.get(`/api/user/thumbnails/${id}`);
       setThumbnail(data?.thumbnail as IThumbnail);
       setLoading(!data?.thumbnail?.image_url);
       setAdditionalDetails(data?.thumbnail?.user_prompt);
