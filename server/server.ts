@@ -1,5 +1,5 @@
 import "dotenv/config";
-import express, { Request, Response } from 'express';
+import express, { Request, Response } from "express";
 import cors from "cors";
 import connectDB from "./configs/db.js";
 import session from "express-session";
@@ -7,54 +7,65 @@ import MongoStore from "connect-mongo";
 import AuthRouter from "./routes/AuthRoutes.js";
 import ThumbnailRouter from "./routes/ThumbnailRoutes.js";
 import UserRouter from "./routes/UserRoutes.js";
-import ContactRouter from "./routes/ContactRoutes.js";
 
-declare module 'express-session'{
-    interface SessionData{
-        isLoggedIn : boolean;
-        userID: String;
-    }
+declare module "express-session" {
+  interface SessionData {
+    isLoggedIn: boolean;
+    userID: String;
+  }
 }
 
-await connectDB ();
+await connectDB();
 
 const app = express();
 
-// Middleware
-app.use(cors({
-    origin: [
-  "http://localhost:5173",
-  "http://localhost:3000",
-],
-    credentials: true
-}))
+// Required when running behind Vercel's proxy
+app.set("trust proxy", 1);
 
-app.use(session({
-    secret:process.env.SESSION_SECRET as string,
+// CORS
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:3000",
+      "https://thumbcraftapp.vercel.app",
+    ],
+    credentials: true,
+  }),
+);
+
+// Session
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET as string,
     resave: false,
     saveUninitialized: false,
+
     cookie: {
-        maxAge: 1000*60*24*7
-    }, // 7 days
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "none",
+    },
+
     store: MongoStore.create({
-        mongoUrl: process.env.MONGODB_URI as string,
-        collectionName: 'sessions'
-    })
-}))
+      mongoUrl: process.env.MONGODB_URI as string,
+      collectionName: "sessions",
+    }),
+  }),
+);
 
 app.use(express.json());
 
 const port = process.env.PORT || 3000;
 
-app.get('/', (req: Request, res: Response) => {
-    res.send('Server is Live!');
+app.get("/", (req: Request, res: Response) => {
+  res.send("Server is Live!");
 });
 
-app.use('/api/auth', AuthRouter)
-app.use('/api/thumbnail', ThumbnailRouter)
-app.use('/api/user', UserRouter)
-app.use('/api/contact', ContactRouter)
+app.use("/api/auth", AuthRouter);
+app.use("/api/thumbnail", ThumbnailRouter);
+app.use("/api/user", UserRouter);
 
 app.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
+  console.log(`Server is running at http://localhost:${port}`);
 });
